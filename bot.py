@@ -8,14 +8,23 @@ from dotenv import load_dotenv
 from datetime import datetime
 import sqlite3
 import lyricsgenius
+import youtube_dl
+import sys
+import ffmpeg
+
+
+file_dir = os.path.dirname(__file__)
+sys.path.append(file_dir)
+
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
+VAULT_GUILD = os.getenv("DISCORD_VAULT_GUILD")
 
 bot = commands.Bot(command_prefix = "~")
 
-for filename in os.listdir("./cogs"):
+for filename in os.listdir("C:/Users/Joseph/PycharmProjects/discordBot/cogs"):
     if filename.endswith(".py"):
         bot.load_extension(f"cogs.{filename[:-3]}")
 
@@ -31,54 +40,92 @@ async def unload(ctx, extension):
 #on events
 @bot.event
 async def on_ready():  #upon being started
+    fp = open("C:/Users/Joseph/PycharmProjects/discordBot/peepoNotes.png", 'rb')
+    pfp = fp.read()
+    #await bot.user.edit(avatar=pfp)
     for guild in bot.guilds:
         if guild.name == GUILD:
-            break
+            print(
+                f"{bot.user} is connected to the following guild:\n"
+                f"{guild.name}(id: {guild.id})\n"
+            )
 
-    print(
-        f"{bot.user} is connected to the following guild:\n"
-        f"{guild.name}(id: {guild.id})\n"
-    )
-
-    members = "\n - ".join([member.name for member in guild.members])
-    membersId =  ([member.id for member in guild.members])
-    memberDict = {}
-    for member in guild.members:
-        memberDict[member.id] = member.name
-    db = sqlite3.connect("casino.sqlite")
-    cursor = db.cursor()
-    cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS players(
-                        playerID INT,
-                        playerName TEXT,
-                        moneyAmount INT,
-                        winCount INT,
-                        lossCount INT,
-                        lastAllowance DATE
-                        )
-                    """)
+            members = "\n - ".join([member.name for member in guild.members])
+            membersId =  ([member.id for member in guild.members])
+            memberDict = {}
+            for member in guild.members:
+                memberDict[member.id] = member.name
+            db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/casino.sqlite")
+            cursor = db.cursor()
+            cursor.execute("""
+                            CREATE TABLE IF NOT EXISTS players(
+                                playerID INT,
+                                playerName TEXT,
+                                moneyAmount INT,
+                                winCount INT,
+                                lossCount INT,
+                                lastAllowance DATE
+                                )
+                            """)
 
 
-    db = sqlite3.connect("casino.sqlite")
-    cursor = db.cursor()
+            db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/casino.sqlite")
+            cursor = db.cursor()
 
-    #Populate Table First Time
-    #for players in memberDict:
-    #    sql = "INSERT INTO players VALUES (?,?,?,?,?,?)"
-    #    val = players, memberDict[players], 25000, 0,0, None
-    #    cursor.execute(sql, val)
+            ##Populate Table First Time
+            for players in memberDict:
+                sql = "INSERT INTO players VALUES (?,?,?,?,?,?)"
+                val = players, memberDict[players], 25000, 0,0, None
+                cursor.execute(sql, val)
 
-    db.commit()
-    cursor.close()
-    db.close()
+            db.commit()
+            cursor.close()
+            db.close()
 
-    await bot.change_presence(activity = discord.Game(name = "~help for commands"))
+        if guild.name == VAULT_GUILD:
+            print(
+                f"{bot.user} is connected to the following guild:\n"
+                f"{guild.name}(id: {guild.id})\n"
+            )
 
+            members = "\n - ".join([member.name for member in guild.members])
+            membersId = ([member.id for member in guild.members])
+            memberDict = {}
+            for member in guild.members:
+                memberDict[member.id] = member.name
+            db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/vaultCasino.sqlite")
+            cursor = db.cursor()
+            cursor.execute("""
+                            CREATE TABLE IF NOT EXISTS players(
+                                playerID INT,
+                                playerName TEXT,
+                                moneyAmount INT,
+                                winCount INT,
+                                lossCount INT,
+                                lastAllowance DATE
+                                )
+                            """)
+            db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/vaultCasino.sqlite")
+            cursor = db.cursor()
+
+            #Populate Table First Time
+            #for players in memberDict:
+            #    sql = "INSERT INTO players VALUES (?,?,?,?,?,?)"
+            #    val = players, memberDict[players], 25000, 0,0, None
+            #    print("something")
+            #    cursor.execute(sql, val)
+
+
+            db.commit()
+            cursor.close()
+            db.close()
+
+    await bot.change_presence(activity = discord.Activity(type=discord.ActivityType.watching, name = "~help for commands"))
 @bot.event
-async def on_member_join(ctx):  #gives member basic role on joining server
-    role = discord.utils.get(ctx.guild.roles, name = "Normies")
-    print(role)
-    await ctx.add_roles(role)
+async def on_member_join(member):
+    role = get(member.guild.roles, name="plebs")
+    await member.add_roles(role)
+    print(member.name + " was given pleb role")
 
 @bot.event
 async def on_message(message):  #if certain words are typed, bot has a response
@@ -103,7 +150,7 @@ async def on_message(message):  #if certain words are typed, bot has a response
         await message.add_reaction(vomit)
 
     #if (message.author.name == "Leahpar"):
-    #    await message.channel.send("(☞ ͡° ͜ʖ ͡°)☞ ᵈᵒⁿᵗ ᵗᵃˡᵏᶦⁿᵍ ᵖˡᵉᵃˢᵉ")
+    #   await message.channel.send("(☞ ͡° ͜ʖ ͡°)☞ ᵈᵒⁿᵗ ᵗᵃˡᵏᶦⁿᵍ ᵖˡᵉᵃˢᵉ")
 
     # if(message.author.name == "Eclipse"):
     #   await message.channel.send("now ᴘʟᴀʏɪɴɢ: Who asked (Feat: Nobody) ───────────:white_circle:────── ◄◄⠀▐▐⠀►► 𝟸:𝟷𝟾 / 𝟹:𝟻𝟼⠀───○ :loud_sound:")
@@ -120,7 +167,7 @@ async def joris(ctx):
 
 #DATABASE STUFF
 def connectToDB():  #returns database and cursor pointer to games database
-    db = sqlite3.connect("games.sqlite")
+    db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/games.sqlite")
     cursor = db.cursor()
     return db, cursor
 
@@ -140,4 +187,6 @@ async def customQuery(ctx, *query):
     closeDB(db,cursor)
     await ctx.send(result)
 
+
 bot.run(TOKEN)
+
