@@ -15,7 +15,7 @@ class CallOfDuty(commands.Cog):
 
     # DATABASE STUFF
     def connectToDB(self):  # returns database and cursor pointer to games database
-        db = sqlite3.connect("games.sqlite")
+        db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/games.sqlite")
         cursor = db.cursor()
         return db, cursor
 

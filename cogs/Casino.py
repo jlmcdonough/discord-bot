@@ -10,7 +10,9 @@ import asyncio
 class Casino(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.channelID = 711330308728946718   #channelID for gambling text channel
+        self.broyosServerID = 573599118035910677
+        self.broyosChannelID = 711330308728946718   #channelID for gambling text channel
+        self.vaultChannelID = 739560506595082300
         self.last_player = None
         self.blackjackPlayerCards = []
         self.blackjackDealerCards = []
@@ -27,7 +29,7 @@ class Casino(commands.Cog):
 
     # DATABASE STUFF
     def connectToDB(self):  # returns database and cursor pointer to games database
-        db = sqlite3.connect("casino.sqlite")
+        db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/casino.sqlite")
         cursor = db.cursor()
         return db, cursor
 
@@ -96,12 +98,13 @@ class Casino(commands.Cog):
     #DONATE
     @commands.command(hidden = True)
     async def poor(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             db,cursor = self.connectToDB()
             cursor.execute("""UPDATE players
                               SET moneyAmount = 1000000
                               WHERE playerID = ?""", (ctx.author.id,))
             self.closeDB(db, cursor)
+            print("read")
         else:
             await ctx.send("Keep all casino related commands in the gambling text channel")
 
@@ -109,7 +112,7 @@ class Casino(commands.Cog):
     #ALLOWANCE
     @commands.command(name = "allowance", help="Gives daily allowance", description="")
     async def allowance(self,ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             db, cursor = self.connectToDB()
             cursor.execute("""SELECT lastAllowance, moneyAmount
                                 FROM players
@@ -138,7 +141,7 @@ class Casino(commands.Cog):
     #LEADERBOARD
     @commands.command(name = "leaderboard", help = "Brings up the casino leaderboard, sorted by money", description = "")
     async def leaderboard(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             db, cursor = self.connectToDB()
             query = cursor.execute("""SELECT playerName, moneyAmount, winCount, lossCount
                                         FROM players
@@ -159,7 +162,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "balance", help = "Gets current casino money balance", description = "")
     async def balance(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             db, cursor = self.connectToDB()
             cursor.execute("""SELECT moneyAmount
                               FROM players
@@ -173,9 +176,9 @@ class Casino(commands.Cog):
     #DICE GAME
     @commands.command(name = "roll", help = "Challenge another member to dice 1v1", description = "")
     async def roll(self, ctx, challenger, wager):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             print(ctx.author.id)
-            db = sqlite3.connect("casino.sqlite")
+            db = sqlite3.connect("C:/Users/Joseph/PycharmProjects/discordBot/casino.sqlite")
             cursor = db.cursor()
             challenger = challenger.split("!")[1]
             challenger = challenger.split(">")[0]
@@ -194,7 +197,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "acceptRoll", help = "Accept roll 1v1 challenge. @host", description = "")
     async def acceptRoll(self, ctx, host):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             db, cursor = self.connectToDB()
             cursor.execute("""SELECT playerName
                               FROM players
@@ -298,7 +301,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "declineRoll", help = "Decline roll 1v1 challenge. @host", description = "")
     async def declineRoll(self, ctx, host):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(ctx.author.id == self.rollChallengerID):
                 host = host.split("!")[1]
                 host = host.split(">")[0]
@@ -427,7 +430,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "blackjack", help = "Start a game of blackjack", description = "")
     async def blackjack(self, ctx, wager):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(self.last_player == None):
                 self.last_player = ctx.message.author.id
                 self.wager = int(wager)
@@ -472,7 +475,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "hit", help = "BLACKJACK: Draw another card", description = "")
     async def hit(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(ctx.message.author.id == self.last_player):
                 #print("Player Hit")
                 hitCard = self.drawCard()
@@ -499,7 +502,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "doubleDown", help = "BLACKJACK: Double wager and only get one hit. Can only be used on first turn", description = "")
     async def doubleDown(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(ctx.message.author.id == self.last_player):
                 #print("Player Double Down")
                 self.wager = int(self.wager) * 2
@@ -544,7 +547,7 @@ class Casino(commands.Cog):
 
     @commands.command(name = "stand", help = "BLACKJACK: Stay with current cards", description = "")
     async def stand(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(ctx.message.author.id == self.last_player):
                 #print("Player Stand")
                 #print("Player Sum: ", self.blackjackPlayerSum)
@@ -608,21 +611,19 @@ class Casino(commands.Cog):
 
     @commands.command(name = "rouletteOpen", help = "Starts a roulette game", description = "")
     async def rouletteOpen(self, ctx):
-        print("OPEN")
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(self.rouletteOwner != None):
                 await ctx.send("There is already a roulette game open")
             elif(self.rouletteOwner == None):
                 self.rouletteOwner = ctx.message.author.id
                 self.rouletteBets = []
                 await ctx.send("Roulette game now open! ~rouletteBet to enter")
-
         else:
             await ctx.send("Keep all casino related commands in the gambling text channel")
 
     @commands.command(name = "rouletteBet", help = "Place a bet on one color (green/red/black) per command. Can place multiple bets per match, but one command per bet", description = "")
     async def rouletteBet(self, ctx, color, wager):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(self.rouletteOwner != None):
                 if(color.lower() == "green" or color.lower() == "red" or color.lower() == "black"):
                     if(self.checkWager(ctx.message.author.id) >= int(wager)):
@@ -651,11 +652,10 @@ class Casino(commands.Cog):
 
     @commands.command(name = "rouletteSpin", help = "Triggers the roulette game to begin", description = "")
     async def rouletteSpin(self, ctx):
-        if (ctx.message.channel.id == self.channelID):
+        if (ctx.message.channel.id == self.broyosChannelID or ctx.message.channel.id == self.vaultChannelID):
             if(self.rouletteOwner == ctx.message.author.id):
                 spinNum = random.randint(0,14)
                 fileNum = "rouletteGifs/roulette" + str(spinNum) + ".gif"
-                print(fileNum)
                 await ctx.channel.send(file=discord.File(fileNum))
                 await asyncio.sleep(9)
                 db, cursor = self.connectToDB()
@@ -737,5 +737,37 @@ class Casino(commands.Cog):
         else:
             await ctx.send("Keep all casino related commands in the gambling text channel")
 
+    def flipCoin(self):
+        result = random.randint(1, 2)
+        if(result == 1):
+            side = "HEADS"
+        elif(result == 2):
+            side = "TAILS"
+        return side
+
+    @commands.command(name="heads", help="Coin flip choosing heads", description="")
+    async def heads(self, ctx):
+        await ctx.channel.send(file=discord.File("coinFlipping.gif"),delete_after=3)
+        side = self.flipCoin()
+        response = "RESULT: " + side + "\n"
+        if(side == "HEADS"):
+            response += "WINNER WINNER!"
+        else:
+            response += "Wow you are bad at this!"
+        await asyncio.sleep(2.2)
+        await ctx.send(response)
+
+    @commands.command(name="tails", help="Coin flip choosing tails", description="")
+    async def tails(self, ctx):
+        await ctx.channel.send(file=discord.File("coinFlipping.gif"), delete_after=3)
+        side = self.flipCoin()
+        response = "RESULT: " + side + "\n"
+        if(side == "TAILS"):
+            response += "WINNER WINNER!"
+        else:
+            response += "Wow you are bad at this!"
+        await asyncio.sleep(2.2)
+        await ctx.send(response)
+        
 def setup(bot):
     bot.add_cog(Casino(bot))

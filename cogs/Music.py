@@ -2,11 +2,15 @@ import discord
 from discord.utils import get
 from discord.ext import commands
 import lyricsgenius
+import youtube_dl
+import os
+import ffmpeg
 
 
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.players = {}
 
     # Events
     @commands.Cog.listener()
@@ -95,5 +99,70 @@ class Music(commands.Cog):
         response += "\n```"
         await ctx.send(response)
 
+    @commands.command(pass_context = True)
+    async def join(self, ctx):
+        channel = ctx.message.author.voice.channel
+        await channel.connect()
+
+    @commands.command(pass_context = True)
+    async def leave(self, ctx):
+        guild = ctx.message.guild
+        voice_client = guild.voice_client
+        await voice_client.disconnect()
+
+    @commands.command(pass_context = True, hidden = True)
+    async def play(self, ctx, url: str):
+
+        song_there = os.path.isfile("song.mp3")
+        try:
+            if song_there:
+                os.remove("song.mp3")
+                print("Removed old song file")
+        except PermissionError:
+            print("Trying to delete song file, but it's being played")
+            await ctx.send("ERROR: Music playing")
+            return
+
+        guild = ctx.message.guild
+        voice_channel = guild.voice_client
+        print(voice_channel)
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
+
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            print("Downloading audio now\n")
+            ydl.download([url])
+
+        for file in os.listdir("./"):
+            if file.endswith(".mp3"):
+                name = file
+                print(f"Renamed File: {file}\n")
+                os.rename(file, "song.mp3")
+
+        ctx.voice_channel.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print("Song done!"))
+        voice_channel.source = discord.PCMVolumeTransformer(voice.source)
+        voice_channel.source.volume = 0.07
+
+        nname = name.rsplit("-", 2)
+        await ctx.send(f"Playing: {nname[0]}")
+        print("playing\n")
+
+
+    @commands.command(pass_context = True, hidden = True)
+    async def tplay(self, ctx):
+        guild = ctx.message.guild
+        voice_client = ctx.message.author.voice.channel
+        print(guild, voice_client)
+        discord.VoiceClient.play("https://www.youtube.com/watch?v=MbhXIddT2YY")
+        #player = await voice_client.create_ytdl.player(url)
+        #player[guild.id] = player
+        #player.start()
 def setup(bot):
     bot.add_cog(Music(bot))

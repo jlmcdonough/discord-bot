@@ -5,14 +5,14 @@ import sqlite3
 from datetime import datetime
 
 
-class CounterStrike(commands.Cog):
+class Valorant(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     # Events
     @commands.Cog.listener()
     async def on_ready(self):
-        print("CSGO Cog is being read")
+        print("Valorant Cog is being read")
 
     # DATABASE STUFF
     def connectToDB(self):  # returns database and cursor pointer to games database
@@ -25,40 +25,40 @@ class CounterStrike(commands.Cog):
         cursor.close()
         db.close()
 
-    # CSGO Stats - table is the rank games were played at
+    # Valorant Stats - table is the rank games were played at
     def getRank(self):  # since bot clears variable when going offline, currentRank table stores the current rank and keep track of rank ups/down
         db, cursor = self.connectToDB()
         query = cursor.execute("""SELECT rank
-                                    FROM csCurrentRank
+                                    FROM valCurrentRank
                                     WHERE changeDate IN (
                                         SELECT max(changeDate)
-                                        FROM csCurrentRank);""")  # Gets the most recent rank
+                                        FROM valCurrentRank);""")  # Gets the most recent rank
         result = cursor.fetchall()
         result = result[0][0]
         print(result)
         return str(result)  # sends the most recent rank to the match table so it knows which table to use
 
-    @commands.command(name = "csGetRank",  help = "Gets current MM rank", description = "")
-    async def csGetRank(self,ctx):
+    @commands.command(name = "valGetRank",  help = "Gets current Valorant rank", description = "")
+    async def valGetRank(self,ctx):
         response = "Current Rank: " + self.getRank()
         await ctx.channel.send(response)
 
-    @commands.command(name = "csChangeMMRank",  help = "Change MM rank", description = "")
-    async def csChangeMMRank(self, ctx, newRank):  # is what determines what table match data gets entered into
+    @commands.command(name = "valChangeRank",  help = "Change Valorant rank", description = "")
+    async def valChangeRank(self, ctx, newRank):  # is what determines what table match data gets entered into
         db, cursor = self.connectToDB()
         now = datetime.now()
-        sql = "INSERT INTO csCurrentRank VALUES (?,?)"
+        sql = "INSERT INTO valCurrentRank VALUES (?,?)"
         val = newRank, now
         cursor.execute(sql, val)
         self.closeDB(db, cursor)
         await ctx.channel.send("rank updated you bot")
 
-    @commands.command(name = "csAddMatch",  help = "Adds completed CS match", description = "")
-    async def csAddMatch(self, ctx, mapPlayed, ourScore, theirScore, startingSide):
+    @commands.command(name = "valAddMatch",  help = "Adds completed Valorant match", description = "")
+    async def valAddMatch(self, ctx, mapPlayed, ourScore, theirScore, startingSide):
         db, cursor = self.connectToDB()
-        mmRank = self.getRank()  # calls getRank to go through currentRank table to get what the current rank is
+        valRank = self.getRank()  # calls getRank to go through currentRank table to get what the current rank is
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS """ + mmRank + """(
+            CREATE TABLE IF NOT EXISTS """ + valRank + """(
                 date CURRENT_TIMESTAMP,
                 map TEXT,
                 ourScore INT,
@@ -68,7 +68,7 @@ class CounterStrike(commands.Cog):
         ourScore = int(ourScore)
         theirScore = int(theirScore)
         now = datetime.now()
-        sql = "INSERT INTO " + mmRank + " VALUES (?,?,?,?,?)"
+        sql = "INSERT INTO " + valRank + " VALUES (?,?,?,?,?)"
         val = now, mapPlayed, ourScore, theirScore, startingSide
         cursor.execute(sql, val)
         db.commit()
@@ -83,4 +83,4 @@ class CounterStrike(commands.Cog):
         await ctx.channel.send(response)
 
 def setup(bot):
-    bot.add_cog(CounterStrike(bot))
+    bot.add_cog(Valorant(bot))
